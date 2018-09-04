@@ -1,0 +1,10 @@
+build
+*.d
+*.o
+
+.vscode/.ropeproject
+.sonarlint
+.mypy_cache
+data/__pycache__
+data/.ipynb_checkpoints
+

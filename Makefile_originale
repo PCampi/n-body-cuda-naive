@@ -1,0 +1,44 @@
+TARGET_EXEC ?= nbody_cuda_naive
+SRC_DIR ?= ./src
+BUILD_DIR ?= ./build
+
+CC=gcc
+RM=rm -f
+NVCC=/usr/local/cuda-7.5/bin/nvcc
+
+# CFLAGS=-g3 -O0 -Wall -fopenmp -MMD -MP
+CFLAGS=-O3 -Wall -fopenmp -MMD -MP -std=c11
+LDFLAGS=
+LDLIBS=-lgomp -lm
+
+# SRCS=$(shell find $(SRC_DIR) -name *.c)
+D_ARTIFACTS=$(shell find $(SRC_DIR) -name *.d)
+SRCS=./src/simulation/physics.c ./src/simulation/verlet.c ./src/utils/array-utils.c ./src/utils/cli.c ./src/io/txt_reader.c ./src/main.c
+OBJS := $(subst .c,.o,$(SRCS))
+DEPS := $(OBJS:.o=.d)
+
+$(BUILD_DIR)/$(TARGET_EXEC): $(OBJS)
+	$(CC) $(OBJS) -o $@ $(CFLAGS) $(LDFLAGS) $(LDLIBS)
+
+# c source
+$(BUILD_DIR)/%.c.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+test:
+	$(CC) ./src/tests/test_txt_reader.c ./src/unity_test/unity.c ./src/io/txt_reader.h ./src/io/txt_reader.c -I"./src/io" -o TestTxtReader
+	./TestTxtReader
+
+prova:
+	$(CC) ./prova.c ./src/io/txt_reader.c -g3 -o ./build/prova_txt_reader
+
+.PHONY: clean
+
+clean:
+	$(RM) $(OBJS)
+	$(RM) $(DEPS)
+	$(RM) $(D_ARTIFACTS)
+	$(RM) -r $(BUILD_DIR)/*
+	$(RM) TestTxtReader
+	$(RM) ./build/prova_txt_reader
+
+-include $(DEPS)
