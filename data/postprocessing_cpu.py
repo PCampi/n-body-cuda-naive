@@ -134,48 +134,51 @@ def compute_results(filename):
     Main function.
     """
     data = pd.read_csv(filename, sep=',')
-    data = data[data['niter'] == 1000]
+    data.loc[:, 'elapsed'] = data['end'] - data['start']
 
     # 1. create threads - vs - times data to plot
     unique_body_num = np.unique(data['nbodies'].values)
 
     results = {
-        'bodies': unique_body_num,
+        'bodies': unique_body_num.tolist(),
+        'threads': [],
         'mean': [],
         'lower': [],
         'upper': [],
-        'mean_over': [],
-        'lower_over': [],
-        'upper_over': [],
     }
 
     for n_bodies in results['bodies']:
-        subset = data[data['nbodies'] == n_bodies]
-    
-        m, l, u = get_mean_ci(subset['elapsed_time_s'].values)
-        mo, lo, uo = get_mean_ci(subset['elapsed_time_s'].values - subset['computing_time_s'].values)
-        
-        results['mean'].append(m)
-        results['lower'].append(l)
-        results['upper'].append(u)
+        query_1 = data[data['nbodies'] == n_bodies]
+        threads_for_bodies = np.unique(query_1['threads'].values)
+        results['threads'].append(threads_for_bodies)
+        mean = []
+        lower = []
+        upper = []
 
-        results['mean_over'].append(mo)
-        results['lower_over'].append(lo)
-        results['upper_over'].append(uo)
+        for n_threads in threads_for_bodies:
+            subset = query_1[query_1['threads'] == n_threads]
+            m, l, u = get_mean_ci(subset['elapsed'].values)
+            mean.append(m)
+            lower.append(l)
+            upper.append(u)
+
+        results['lower'].append(lower.copy())
+        results['mean'].append(mean.copy())
+        results['upper'].append(upper.copy())
 
     return results
 
 
-#if __name__ == '__main__':
-#    results = compute_results('./results_cuda_naive_')
+if __name__ == '__main__':
+    results = compute_results('./results_static.csv')
 
-#    fig_colors = [
-#        ('forestgreen', 'mediumseagreen'),  # 1024
-#        ('navy', 'lightskyblue'),  # 2048
-#        ('gold', 'blanchedalmond'),  # 4096
-#        ('firebrick', 'lightcoral'),  # 8192
-#    ]
+    fig_colors = [
+        ('forestgreen', 'mediumseagreen'),  # 1024
+        ('navy', 'lightskyblue'),  # 2048
+        ('gold', 'blanchedalmond'),  # 4096
+        ('firebrick', 'lightcoral'),  # 8192
+    ]
 
-#    assert len(fig_colors) == len(results['bodies'])
+    assert len(fig_colors) == len(results['bodies'])
 
-#    fig, ax = plot_complete(results, n_iter=1000, colors=fig_colors)
+    fig, ax = plot_complete(results, n_iter=1000, colors=fig_colors)

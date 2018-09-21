@@ -1,0 +1,4 @@
+elapsed_time_s,computing_time_s,nbodies,niter,n_blocks,threads_per_block
+17.978873,17.977978,1024,10,1,1
+71.894742,71.893761,2048,10,1,1
+287.670875,287.669678,4096,10,1,1
